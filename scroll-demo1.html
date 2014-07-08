@@ -1,0 +1,128 @@
+<head>
+  <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="http://momentjs.com/downloads/moment.js"></script>
+  <script src="http://underscorejs.org/underscore-min.js"></script>
+</head>
+<body style="position: relative; margin: 0;">
+  <section style="height: 100%; width: 100%; background-color: orange"></section>
+  <section style="height: 100%; width: 100%; background-color: black"></section>
+  <section style="height: 100%; width: 100%; background-color: red"></section>
+  <section style="height: 100%; width: 100%; background-color: yellow"></section>
+  <section style="height: 100%; width: 100%; background-color: purple"></section>
+  <section style="height: 100%; width: 100%; background-color: blue"></section>
+</body>
+
+<script type="text/javascript">
+  $(function(){
+
+    function ScrollTimes() {
+      this.times = [];
+
+      this.deltas = function() {
+        ret = []
+        for (var i = 1; i < this.times.length; i++) {
+          var t1, t2, delta;
+
+          t1 = this.times[i - 1]
+          t2 = this.times[i]
+
+          delta = t2.diff(t1);
+          ret.push(delta);
+        }
+        return ret;
+      }
+
+      this.deltas2 = function() {
+        var deltas, ret;
+
+        deltas = this.deltas();
+        ret = [];
+        for (var i=1; i < deltas.length; i++) {
+          var t1, t2, delta;
+
+          t1 = deltas[i - 1];
+          t2 = deltas[i];
+          delta = parseInt(t2) - parseInt(t1);
+          ret.push(delta);
+        }
+        return ret;
+      }
+
+      this.push = function(m) {
+        this.times.push(m);
+      }
+
+      this.clear = function() {
+        this.times = []
+
+      }
+    }
+
+    function Scroll() {
+
+      this.init = function() {
+        this.times = [];
+        this.deltas = [];
+        this.direction = 0;
+
+        $(window).on('wheel', $.proxy(function(event) {
+          event.preventDefault();
+          this.direction = event.originalEvent.deltaY
+          if (this.direction != 0)
+            this.direction = this.direction / Math.abs(this.direction)
+          this.push(event.originalEvent.wheelDeltaY);
+        }, this));
+      }
+
+      this.push = function(d) {
+        this.times.push(moment())
+        this.deltas.push(d)
+        window.data.push(d)
+        //console.log(d)
+
+        if (this.times.length > 2) {
+          this.times.shift()
+          this.deltas.shift()
+        } else {
+          return;
+        }
+
+        d1 = Math.abs(this.deltas[0])
+        d2 = Math.abs(this.deltas[1])
+
+        if (d2 < 15) {
+          if ((d1 - d2) > 10) {
+            console.log("scrolled")
+            window.animatedScroll(this.direction);
+            return;
+          }
+        }
+
+        t1 = this.times[0]
+        t2 = this.times[1]
+
+        if (t2.diff(t1) > 60) {
+          console.log("scrolled")
+          window.animatedScroll(this.direction);
+          return;
+        }
+
+      }
+
+      this.init();
+    }
+    
+    window.data = []
+    window.scroll = new Scroll()
+
+    window.animatedScroll = function(direction) {
+      var posY = parseInt($("body").css("top"));
+      if (isNaN(posY))
+        posY = 0
+      var height = $("section").height();
+      direction = -direction
+      var move = direction * height + posY;
+      $("body").animate({'top': move}, 500)
+    }
+  });
+</script>
